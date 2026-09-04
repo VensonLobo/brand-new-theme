@@ -1,0 +1,49 @@
+# ----------------------------------------------------------------------
+# Lobo Travels - Root .htaccess Configuration
+# Fixes 403 Forbidden when deploying Next.js project on Apache / WordPress hosting
+# ----------------------------------------------------------------------
+
+# Look for index files in order: root index.html, exported out/index.html, index.php
+DirectoryIndex index.html out/index.html index.php
+
+# Prevent directory listing error (403 Forbidden) while allowing file access
+Options -Indexes +FollowSymLinks
+
+# Grant public access (prevents 403 Forbidden on Apache 2.4+)
+<IfModule mod_authz_core.c>
+    Require all granted
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Allow from all
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Allow direct access to _next static chunks without 403
+    RewriteCond %{REQUEST_URI} ^/_next/ [NC,OR]
+    RewriteCond %{REQUEST_URI} ^/out/_next/ [NC]
+    RewriteRule .* - [L]
+
+    # If out/ directory exists from static export, transparently serve out/
+    RewriteCond %{DOCUMENT_ROOT}/out/index.html -f
+    RewriteCond %{REQUEST_URI} !^/out/
+    RewriteRule ^$ out/index.html [L]
+
+    RewriteCond %{DOCUMENT_ROOT}/out%{REQUEST_URI} -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}/out%{REQUEST_URI} -d
+    RewriteCond %{REQUEST_URI} !^/out/
+    RewriteRule ^(.*)$ out/$1 [L]
+
+    # Check for HTML files matching clean URLs in out/
+    RewriteCond %{DOCUMENT_ROOT}/out%{REQUEST_URI}/index.html -f
+    RewriteCond %{REQUEST_URI} !^/out/
+    RewriteRule ^(.*)$ out/$1/index.html [L]
+
+    # If files exist in root, serve them directly
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+</IfModule>

@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:static": "NODE_ENV=production STATIC_EXPORT=true next build",
+    "export": "NODE_ENV=production STATIC_EXPORT=true next build",
     "start": "next start",
     "lint": "eslint .",
     "clean": "next clean"
