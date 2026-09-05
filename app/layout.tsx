@@ -53,11 +53,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${jakarta.variable} scroll-smooth`}>
-      <body className="font-sans bg-[#F7F5F2] text-[#0A1128] antialiased selection:bg-[#C5A059] selection:text-white" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${playfair.variable} ${jakarta.variable} scroll-smooth`}
+    >
+      <head>
+        <link rel="canonical" href="https://lobotravels.com" />
+      </head>
+
+      <body
+        className="font-sans bg-[#F7F5F2] text-[#0A1128] antialiased selection:bg-[#C5A059] selection:text-white"
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>
   );
 }
-
