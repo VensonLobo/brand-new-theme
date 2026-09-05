@@ -17,9 +17,11 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'About Lobo Travels | Bespoke Journey Designers in Mandir Marg, New Delhi',
+  title: 'About Lobo Travels | Bespoke travel package Designers',
   description:
     'Learn about Lobo Travels: a 30-year legacy of private, curated travel across India. Based at Mandir Marg, New Delhi. Unhurried itineraries, handpicked stays, and dedicated personal chauffeurs.',
+  alternates: {
+    canonical: "https://lobotravels.com/about",
 };
 
 export default function AboutPage() {
