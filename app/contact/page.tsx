@@ -1,9 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { GlobalHeader } from '@/components/global-header';
 import { GlobalFooter } from '@/components/global-footer';
 import { COMPANY_DETAILS } from '@/lib/data';
+import {
+  FORM_DESTINATION_GROUPS,
+  ADULT_OPTIONS,
+  CHILDREN_OPTIONS,
+  getTodayDateString,
+} from '@/lib/form-options';
 import {
   MapPin,
   Phone,
@@ -13,15 +19,23 @@ import {
   MessageCircle,
   CheckCircle2,
   Building2,
+  Calendar,
+  Users,
+  ChevronDown,
 } from 'lucide-react';
 
 export default function ContactPage() {
+  const today = useMemo(() => getTodayDateString(), []);
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
     destination: '',
-    travelDates: '',
+    fromDate: '',
+    toDate: '',
+    adults: '2 Adults',
+    children: '0 Children',
     message: '',
   });
 
@@ -32,6 +46,17 @@ export default function ContactPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
+    const datesString =
+      formData.fromDate && formData.toDate
+        ? `${formData.fromDate} to ${formData.toDate}`
+        : formData.fromDate
+        ? `From ${formData.fromDate}`
+        : 'Flexible dates';
+
+    const travelersString = `${formData.adults}${
+      formData.children !== '0 Children' ? `, ${formData.children}` : ''
+    }`;
+
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitted(true);
@@ -39,6 +64,8 @@ export default function ContactPage() {
         const stored = JSON.parse(localStorage.getItem('lobo_enquiries') || '[]');
         stored.push({
           ...formData,
+          travelDates: datesString,
+          travelers: travelersString,
           source: 'contact_page',
           submittedAt: new Date().toISOString(),
           id: 'LT-' + Math.floor(100000 + Math.random() * 900000),
@@ -262,32 +289,120 @@ export default function ContactPage() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wider mb-1">
-                          Destination of Interest
+                        <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+                          <span>Destination of Interest</span>
+                          <span className="text-[10px] text-[#C59B27] font-normal lowercase">22+ circuits</span>
                         </label>
-                        <input
-                          type="text"
-                          id="contact-form-destination"
-                          value={formData.destination}
-                          onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
-                          placeholder="e.g. Rajasthan, Kashmir, Golden Triangle..."
-                          className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-lg text-sm text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C59B27] transition-all placeholder:text-stone-400"
-                        />
+                        <div className="relative">
+                          <select
+                            id="contact-form-destination"
+                            value={formData.destination}
+                            onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                            className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-lg text-sm text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C59B27] transition-all cursor-pointer appearance-none pr-8 [&>option]:bg-white [&>optgroup]:bg-white"
+                          >
+                            <option value="">Select Destination / Circuit</option>
+                            {FORM_DESTINATION_GROUPS.map((group) => (
+                              <optgroup key={group.group} label={group.group}>
+                                {group.options.map((opt) => (
+                                  <option key={opt} value={opt}>
+                                    {opt}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-stone-400 absolute right-2.5 top-3.5 pointer-events-none" />
+                        </div>
                       </div>
                     </div>
 
+                    {/* Travel Dates: Calendar From & To */}
                     <div>
-                      <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wider mb-1">
-                        Estimated Travel Month / Dates
+                      <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-[#C59B27]" />
+                        <span>Travel Month / Dates (Calendar)</span>
                       </label>
-                      <input
-                        type="text"
-                        id="contact-form-dates"
-                        value={formData.travelDates}
-                        onChange={(e) => setFormData({ ...formData, travelDates: e.target.value })}
-                        placeholder="e.g. November 2025 (approx 7 days)"
-                        className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-lg text-sm text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C59B27] transition-all"
-                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <span className="block text-[10px] uppercase font-medium text-stone-500 mb-0.5">
+                            From (Departure)
+                          </span>
+                          <input
+                            type="date"
+                            id="contact-form-from-date"
+                            min={today}
+                            value={formData.fromDate}
+                            onChange={(e) => {
+                              const newFrom = e.target.value;
+                              setFormData((prev) => ({
+                                ...prev,
+                                fromDate: newFrom,
+                                toDate: prev.toDate && prev.toDate < newFrom ? newFrom : prev.toDate,
+                              }));
+                            }}
+                            className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-lg text-sm text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C59B27] transition-all cursor-pointer"
+                          />
+                        </div>
+                        <div>
+                          <span className="block text-[10px] uppercase font-medium text-stone-500 mb-0.5">
+                            To (Return)
+                          </span>
+                          <input
+                            type="date"
+                            id="contact-form-to-date"
+                            min={formData.fromDate || today}
+                            value={formData.toDate}
+                            onChange={(e) => setFormData({ ...formData, toDate: e.target.value })}
+                            className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-lg text-sm text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C59B27] transition-all cursor-pointer"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Travelers Count: Adults and Children */}
+                    <div>
+                      <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-[#C59B27]" />
+                        <span>Travelers Count</span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="relative">
+                          <span className="block text-[10px] uppercase font-medium text-stone-500 mb-0.5">
+                            Adults (12+ yrs)
+                          </span>
+                          <select
+                            id="contact-form-adults"
+                            value={formData.adults}
+                            onChange={(e) => setFormData({ ...formData, adults: e.target.value })}
+                            className="w-full px-3.5 py-2 bg-stone-50 border border-stone-300 rounded-lg text-sm text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C59B27] transition-all cursor-pointer appearance-none pr-7"
+                          >
+                            {ADULT_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-stone-400 absolute right-2 top-7 pointer-events-none" />
+                        </div>
+                        <div className="relative">
+                          <span className="block text-[10px] uppercase font-medium text-stone-500 mb-0.5">
+                            Children (0-11 yrs)
+                          </span>
+                          <select
+                            id="contact-form-children"
+                            value={formData.children}
+                            onChange={(e) => setFormData({ ...formData, children: e.target.value })}
+                            className="w-full px-3.5 py-2 bg-stone-50 border border-stone-300 rounded-lg text-sm text-stone-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C59B27] transition-all cursor-pointer appearance-none pr-7"
+                          >
+                            {CHILDREN_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-stone-400 absolute right-2 top-7 pointer-events-none" />
+                        </div>
+                      </div>
                     </div>
 
                     <div>

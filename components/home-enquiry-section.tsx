@@ -1,17 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { COMPANY_DETAILS } from '@/lib/data';
-import { Send, CheckCircle2, MessageCircle, ShieldCheck, Sparkles } from 'lucide-react';
+import {
+  FORM_DESTINATION_GROUPS,
+  ADULT_OPTIONS,
+  CHILDREN_OPTIONS,
+  getTodayDateString,
+} from '@/lib/form-options';
+import {
+  Send,
+  CheckCircle2,
+  MessageCircle,
+  ShieldCheck,
+  Sparkles,
+  Phone,
+  Calendar,
+  Users,
+  ChevronDown,
+} from 'lucide-react';
 
 export function HomeEnquirySection() {
+  const today = useMemo(() => getTodayDateString(), []);
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
     destination: '',
-    travelDates: '',
-    travelers: '2 Adults',
+    fromDate: '',
+    toDate: '',
+    adults: '2 Adults',
+    children: '0 Children',
     requirements: '',
   });
 
@@ -22,6 +42,17 @@ export function HomeEnquirySection() {
     e.preventDefault();
     setIsSubmitting(true);
 
+    const datesString =
+      formData.fromDate && formData.toDate
+        ? `${formData.fromDate} to ${formData.toDate}`
+        : formData.fromDate
+        ? `From ${formData.fromDate}`
+        : 'Flexible dates';
+
+    const travelersString = `${formData.adults}${
+      formData.children !== '0 Children' ? `, ${formData.children}` : ''
+    }`;
+
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitted(true);
@@ -29,6 +60,8 @@ export function HomeEnquirySection() {
         const stored = JSON.parse(localStorage.getItem('lobo_enquiries') || '[]');
         stored.push({
           ...formData,
+          travelDates: datesString,
+          travelers: travelersString,
           source: 'home_lead_form',
           submittedAt: new Date().toISOString(),
           id: 'LT-' + Math.floor(100000 + Math.random() * 900000),
@@ -41,12 +74,23 @@ export function HomeEnquirySection() {
   };
 
   const getWhatsAppUrl = () => {
+    const datesString =
+      formData.fromDate && formData.toDate
+        ? `${formData.fromDate} to ${formData.toDate}`
+        : formData.fromDate
+        ? `From ${formData.fromDate}`
+        : 'Flexible';
+
+    const travelersString = `${formData.adults}${
+      formData.children !== '0 Children' ? `, ${formData.children}` : ''
+    }`;
+
     const text = encodeURIComponent(
       `Hello Lobo Travels! I would like to plan a custom trip.\n` +
       `• Name: ${formData.name || 'Traveler'}\n` +
       `• Destination: ${formData.destination || 'India'}\n` +
-      `• Travelers: ${formData.travelers}\n` +
-      `• Dates: ${formData.travelDates || 'Flexible'}\n` +
+      `• Travelers: ${travelersString}\n` +
+      `• Dates: ${datesString}\n` +
       (formData.requirements ? `• Notes: ${formData.requirements}` : '')
     );
     return `https://wa.me/${COMPANY_DETAILS.whatsappNumber}?text=${text}`;
@@ -181,48 +225,122 @@ export function HomeEnquirySection() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1">
-                        Destination *
+                      <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1 flex items-center justify-between">
+                        <span>Destination *</span>
+                        <span className="text-[9px] text-[#C5A059] font-normal lowercase">22+ circuits</span>
                       </label>
-                      <input
-                        type="text"
-                        required
-                        id="home-form-destination"
-                        value={formData.destination}
-                        onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
-                        placeholder="e.g. Rajasthan, Kashmir, Golden Triangle..."
-                        className="w-full border-b border-gray-200 py-2 text-sm text-[#0A1128] focus:border-[#C5A059] outline-none transition-all bg-transparent placeholder:text-stone-400"
-                      />
+                      <div className="relative">
+                        <select
+                          required
+                          id="home-form-destination"
+                          value={formData.destination}
+                          onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                          className="w-full border-b border-gray-200 py-2 pr-6 text-sm text-[#0A1128] focus:border-[#C5A059] outline-none transition-all bg-transparent cursor-pointer appearance-none [&>option]:bg-white [&>option]:text-[#0A1128] [&>optgroup]:bg-white [&>optgroup]:text-stone-500 [&>optgroup]:font-bold"
+                        >
+                          <option value="">Select Destination / Circuit *</option>
+                          {FORM_DESTINATION_GROUPS.map((group) => (
+                            <optgroup key={group.group} label={group.group}>
+                              {group.options.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-3.5 h-3.5 text-stone-400 absolute right-1 top-3 pointer-events-none" />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1">
-                        Estimated Travel Month / Dates
-                      </label>
-                      <input
-                        type="text"
-                        id="home-form-dates"
-                        value={formData.travelDates}
-                        onChange={(e) => setFormData({ ...formData, travelDates: e.target.value })}
-                        placeholder="e.g. October 15 - 22"
-                        className="w-full border-b border-gray-200 py-2 text-sm text-[#0A1128] focus:border-[#C5A059] outline-none transition-all bg-transparent"
-                      />
+                  {/* Travel Dates: Calendar From & To */}
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1 flex items-center gap-1">
+                      <Calendar className="w-3 h-3 text-[#C5A059]" />
+                      <span>Travel Dates (Calendar)</span>
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <span className="block text-[9px] uppercase tracking-wider text-stone-400 font-semibold mb-0.5">
+                          From (Departure) *
+                        </span>
+                        <input
+                          type="date"
+                          required
+                          id="home-form-from-date"
+                          min={today}
+                          value={formData.fromDate}
+                          onChange={(e) => {
+                            const newFrom = e.target.value;
+                            setFormData((prev) => ({
+                              ...prev,
+                              fromDate: newFrom,
+                              toDate: prev.toDate && prev.toDate < newFrom ? newFrom : prev.toDate,
+                            }));
+                          }}
+                          className="w-full border-b border-gray-200 py-2 text-sm text-[#0A1128] focus:border-[#C5A059] outline-none transition-all bg-transparent cursor-pointer"
+                        />
+                      </div>
+                      <div>
+                        <span className="block text-[9px] uppercase tracking-wider text-stone-400 font-semibold mb-0.5">
+                          To (Return)
+                        </span>
+                        <input
+                          type="date"
+                          id="home-form-to-date"
+                          min={formData.fromDate || today}
+                          value={formData.toDate}
+                          onChange={(e) => setFormData({ ...formData, toDate: e.target.value })}
+                          className="w-full border-b border-gray-200 py-2 text-sm text-[#0A1128] focus:border-[#C5A059] outline-none transition-all bg-transparent cursor-pointer"
+                        />
+                      </div>
                     </div>
+                  </div>
 
-                    <div>
-                      <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1">
-                        Travelers Count
-                      </label>
-                      <input
-                        type="text"
-                        id="home-form-travelers"
-                        value={formData.travelers}
-                        onChange={(e) => setFormData({ ...formData, travelers: e.target.value })}
-                        placeholder="e.g. 2 Adults, 2 Children"
-                        className="w-full border-b border-gray-200 py-2 text-sm text-[#0A1128] focus:border-[#C5A059] outline-none transition-all bg-transparent"
-                      />
+                  {/* Travelers: Adults and Children dropdowns */}
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1 flex items-center gap-1">
+                      <Users className="w-3 h-3 text-[#C5A059]" />
+                      <span>Travelers *</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="relative">
+                        <span className="block text-[9px] uppercase tracking-wider text-stone-400 font-semibold mb-0.5">
+                          Adults (12+ yrs)
+                        </span>
+                        <select
+                          id="home-form-adults"
+                          value={formData.adults}
+                          onChange={(e) => setFormData({ ...formData, adults: e.target.value })}
+                          className="w-full border-b border-gray-200 py-2 pr-6 text-sm text-[#0A1128] focus:border-[#C5A059] outline-none transition-all bg-transparent cursor-pointer appearance-none [&>option]:bg-white [&>option]:text-[#0A1128]"
+                        >
+                          {ADULT_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-3.5 h-3.5 text-stone-400 absolute right-1 top-7 pointer-events-none" />
+                      </div>
+
+                      <div className="relative">
+                        <span className="block text-[9px] uppercase tracking-wider text-stone-400 font-semibold mb-0.5">
+                          Children (0-11 yrs)
+                        </span>
+                        <select
+                          id="home-form-children"
+                          value={formData.children}
+                          onChange={(e) => setFormData({ ...formData, children: e.target.value })}
+                          className="w-full border-b border-gray-200 py-2 pr-6 text-sm text-[#0A1128] focus:border-[#C5A059] outline-none transition-all bg-transparent cursor-pointer appearance-none [&>option]:bg-white [&>option]:text-[#0A1128]"
+                        >
+                          {CHILDREN_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-3.5 h-3.5 text-stone-400 absolute right-1 top-7 pointer-events-none" />
+                      </div>
                     </div>
                   </div>
 

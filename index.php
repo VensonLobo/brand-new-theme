@@ -67,10 +67,14 @@ function serveFile($filePath, $mimeTypes) {
 
 // 1. If requesting a specific file with extension (e.g., _next/static/..., assets/..., favicon.ico)
 if (!empty($cleanPath) && pathinfo($cleanPath, PATHINFO_EXTENSION) !== '') {
+    $baseName = basename($cleanPath);
     $candidates = [
         __DIR__ . '/' . $cleanPath,
+        __DIR__ . '/public/' . $cleanPath,
         __DIR__ . '/out/' . $cleanPath,
-        __DIR__ . '/public/' . $cleanPath
+        __DIR__ . '/assets/' . $baseName,
+        __DIR__ . '/public/assets/' . $baseName,
+        __DIR__ . '/out/assets/' . $baseName,
     ];
     foreach ($candidates as $cand) {
         serveFile($cand, $mimeTypes);

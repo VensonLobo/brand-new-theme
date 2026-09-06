@@ -1,18 +1,29 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { COMPANY_DETAILS, CATEGORIES } from '@/lib/data';
+import {
+  FORM_DESTINATION_GROUPS,
+  ADULT_OPTIONS,
+  CHILDREN_OPTIONS,
+  getTodayDateString,
+} from '@/lib/form-options';
 import {
   ArrowRight,
   Compass,
   Calendar,
   Sparkles,
   ChevronRight,
+  ChevronDown,
   Star,
   Shield,
   Award,
+  Phone,
+  MessageCircle,
+  Users,
+  MapPin,
 } from 'lucide-react';
 import { EnquiryModal } from './enquiry-modal';
 
@@ -46,10 +57,14 @@ const HERO_SLIDES = [
 export function HeroSection() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
+  const today = useMemo(() => getTodayDateString(), []);
+
   const [formState, setFormState] = useState({
     destination: '',
-    travelDates: '',
-    travelers: '2 Adults',
+    fromDate: '',
+    toDate: '',
+    adults: '2 Adults',
+    children: '0 Children',
     name: '',
     phone: '',
   });
@@ -66,6 +81,18 @@ export function HeroSection() {
   const handleHeroSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+
+    const datesString =
+      formState.fromDate && formState.toDate
+        ? `${formState.fromDate} to ${formState.toDate}`
+        : formState.fromDate
+        ? `From ${formState.fromDate}`
+        : 'Flexible dates';
+
+    const travelersString = `${formState.adults}${
+      formState.children !== '0 Children' ? `, ${formState.children}` : ''
+    }`;
+
     setTimeout(() => {
       setIsSubmitting(false);
       setFormSubmitted(true);
@@ -73,6 +100,8 @@ export function HeroSection() {
         const stored = JSON.parse(localStorage.getItem('lobo_enquiries') || '[]');
         stored.push({
           ...formState,
+          travelDates: datesString,
+          travelers: travelersString,
           source: 'hero_plan_your_escape',
           submittedAt: new Date().toISOString(),
           id: 'LT-' + Math.floor(100000 + Math.random() * 900000),
@@ -128,7 +157,7 @@ export function HeroSection() {
             </h1>
 
             <p className="text-stone-300 max-w-lg text-sm sm:text-base leading-relaxed mb-8 font-normal">
-              Experience India at your own rhythm. Zero fixed templates. Purely personalized pacing, hauffeur transfers, and hand-picked heritage suites.
+              Experience India at your own rhythm. Zero fixed templates. Purely personalized pacing, chauffeur transfers, and hand-picked heritage suites.
             </p>
 
             <div className="flex flex-wrap items-center gap-4">
@@ -140,12 +169,18 @@ export function HeroSection() {
                 Explore Circuits
               </Link>
 
-              <div className="border border-white/30 px-6 py-4 flex items-center space-x-2.5 text-white backdrop-blur-xs">
+              <a
+                href={`tel:${COMPANY_DETAILS.phones[0].number}`}
+                id="hero-call-experts-btn"
+                className="border border-white/30 hover:border-[#C5A059] bg-white/5 hover:bg-white/15 px-6 py-4 flex items-center space-x-3 text-white backdrop-blur-xs transition-all active:scale-95 group"
+                title={`Call Lobo Travels Concierge: ${COMPANY_DETAILS.phones[0].display}`}
+              >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs uppercase tracking-widest font-semibold">
-                  Experts Online Now
+                <Phone className="w-4 h-4 text-[#C5A059] group-hover:scale-110 transition-transform" />
+                <span className="text-xs uppercase tracking-widest font-semibold group-hover:text-[#C5A059] transition-colors">
+                  Call Experts: {COMPANY_DETAILS.phones[0].display}
                 </span>
-              </div>
+              </a>
             </div>
 
             {/* Slide Navigation Ticks */}
@@ -221,90 +256,184 @@ export function HeroSection() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleHeroSubmit} className="space-y-4" id="hero-quick-plan-form">
+              <form onSubmit={handleHeroSubmit} className="space-y-3.5" id="hero-quick-plan-form">
+                {/* Destination Dropdown */}
                 <div>
-                  <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1">
-                    Destination of Interest *
+                  <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1 flex items-center justify-between">
+                    <span>Destination of Interest *</span>
+                    <span className="text-[9px] text-[#C5A059] font-normal lowercase">22+ circuits</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    id="hero-form-destination"
-                    placeholder="e.g. Rajasthan, Kashmir, Golden Triangle..."
-                    value={formState.destination}
-                    onChange={(e) => setFormState({ ...formState, destination: e.target.value })}
-                    className="w-full border-b border-gray-200 py-2 focus:border-[#C5A059] outline-none text-sm bg-transparent text-[#0A1128] placeholder:text-stone-400"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1">
-                      Travel Month / Dates
-                    </label>
-                    <input
-                      type="text"
-                      id="hero-form-dates"
-                      placeholder="e.g. Oct 2026"
-                      value={formState.travelDates}
-                      onChange={(e) => setFormState({ ...formState, travelDates: e.target.value })}
-                      className="w-full border-b border-gray-200 py-2 focus:border-[#C5A059] outline-none text-sm bg-transparent text-[#0A1128]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1">
-                      Travelers
-                    </label>
-                    <input
-                      type="text"
-                      id="hero-form-travelers"
-                      placeholder="2 Adults"
-                      value={formState.travelers}
-                      onChange={(e) => setFormState({ ...formState, travelers: e.target.value })}
-                      className="w-full border-b border-gray-200 py-2 focus:border-[#C5A059] outline-none text-sm bg-transparent text-[#0A1128]"
-                    />
+                  <div className="relative">
+                    <select
+                      required
+                      id="hero-form-destination"
+                      value={formState.destination}
+                      onChange={(e) => setFormState({ ...formState, destination: e.target.value })}
+                      className="w-full border-b border-gray-200 py-1.5 pr-6 focus:border-[#C5A059] outline-none text-sm bg-transparent text-[#0A1128] cursor-pointer appearance-none [&>option]:bg-white [&>option]:text-[#0A1128] [&>optgroup]:bg-white [&>optgroup]:text-stone-500 [&>optgroup]:font-bold"
+                    >
+                      <option value="">Select Destination / Circuit *</option>
+                      {FORM_DESTINATION_GROUPS.map((group) => (
+                        <optgroup key={group.group} label={group.group}>
+                          {group.options.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-stone-400 absolute right-1 top-2 pointer-events-none" />
                   </div>
                 </div>
 
+                {/* Calendar Travel Dates: From & To */}
                 <div>
-                  <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1">
-                    Your Full Name *
+                  <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1 flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-[#C5A059]" />
+                    <span>Travel Dates (Calendar)</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    id="hero-form-name"
-                    placeholder="e.g. Devashish Verma"
-                    value={formState.name}
-                    onChange={(e) => setFormState({ ...formState, name: e.target.value })}
-                    className="w-full border-b border-gray-200 py-2 focus:border-[#C5A059] outline-none text-sm bg-transparent text-[#0A1128]"
-                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <span className="block text-[9px] uppercase tracking-wider text-stone-400 font-semibold mb-0.5">
+                        From *
+                      </span>
+                      <input
+                        type="date"
+                        required
+                        id="hero-form-from-date"
+                        min={today}
+                        value={formState.fromDate}
+                        onChange={(e) => {
+                          const newFrom = e.target.value;
+                          setFormState((prev) => ({
+                            ...prev,
+                            fromDate: newFrom,
+                            toDate: prev.toDate && prev.toDate < newFrom ? newFrom : prev.toDate,
+                          }));
+                        }}
+                        className="w-full border-b border-gray-200 py-1 focus:border-[#C5A059] outline-none text-xs bg-transparent text-[#0A1128] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <span className="block text-[9px] uppercase tracking-wider text-stone-400 font-semibold mb-0.5">
+                        To
+                      </span>
+                      <input
+                        type="date"
+                        id="hero-form-to-date"
+                        min={formState.fromDate || today}
+                        value={formState.toDate}
+                        onChange={(e) => setFormState({ ...formState, toDate: e.target.value })}
+                        className="w-full border-b border-gray-200 py-1 focus:border-[#C5A059] outline-none text-xs bg-transparent text-[#0A1128] cursor-pointer"
+                      />
+                    </div>
+                  </div>
                 </div>
 
+                {/* Travelers Dropdowns (Adults & Children) */}
                 <div>
-                  <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1">
-                    Phone / WhatsApp *
+                  <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1 flex items-center gap-1">
+                    <Users className="w-3 h-3 text-[#C5A059]" />
+                    <span>Travelers *</span>
                   </label>
-                  <input
-                    type="tel"
-                    required
-                    id="hero-form-phone"
-                    placeholder="e.g. +91 98112 40072"
-                    value={formState.phone}
-                    onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
-                    className="w-full border-b border-gray-200 py-2 focus:border-[#C5A059] outline-none text-sm bg-transparent text-[#0A1128]"
-                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative">
+                      <select
+                        id="hero-form-adults"
+                        value={formState.adults}
+                        onChange={(e) => setFormState({ ...formState, adults: e.target.value })}
+                        className="w-full border-b border-gray-200 py-1.5 pr-5 focus:border-[#C5A059] outline-none text-xs bg-transparent text-[#0A1128] cursor-pointer appearance-none [&>option]:bg-white [&>option]:text-[#0A1128]"
+                      >
+                        {ADULT_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-3 h-3 text-stone-400 absolute right-1 top-2 pointer-events-none" />
+                    </div>
+                    <div className="relative">
+                      <select
+                        id="hero-form-children"
+                        value={formState.children}
+                        onChange={(e) => setFormState({ ...formState, children: e.target.value })}
+                        className="w-full border-b border-gray-200 py-1.5 pr-5 focus:border-[#C5A059] outline-none text-xs bg-transparent text-[#0A1128] cursor-pointer appearance-none [&>option]:bg-white [&>option]:text-[#0A1128]"
+                      >
+                        {CHILDREN_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-3 h-3 text-stone-400 absolute right-1 top-2 pointer-events-none" />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="pt-3">
+                {/* Contact: Name & Phone */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      id="hero-form-name"
+                      placeholder="e.g. Vikram Verma"
+                      value={formState.name}
+                      onChange={(e) => setFormState({ ...formState, name: e.target.value })}
+                      className="w-full border-b border-gray-200 py-1.5 focus:border-[#C5A059] outline-none text-sm bg-transparent text-[#0A1128] placeholder:text-stone-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest font-bold text-stone-400 mb-1">
+                      Phone / WhatsApp *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      id="hero-form-phone"
+                      placeholder="e.g. 9811240072"
+                      value={formState.phone}
+                      onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
+                      className="w-full border-b border-gray-200 py-1.5 focus:border-[#C5A059] outline-none text-sm bg-transparent text-[#0A1128] placeholder:text-stone-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2">
                   <button
                     type="submit"
                     disabled={isSubmitting}
                     id="hero-form-submit-btn"
-                    className="w-full bg-[#0A1128] text-white py-4 font-bold uppercase tracking-[0.2em] text-xs hover:bg-[#C5A059] hover:text-[#0A1128] transition-colors disabled:opacity-75"
+                    className="w-full bg-[#0A1128] text-white py-3.5 font-bold uppercase tracking-[0.2em] text-xs hover:bg-[#C5A059] hover:text-[#0A1128] transition-colors disabled:opacity-75 cursor-pointer shadow-md"
                   >
                     {isSubmitting ? 'Transmitting...' : 'Get a Custom Itinerary'}
                   </button>
+                </div>
+
+                {/* Quick Call & WhatsApp links at bottom of card */}
+                <div className="flex items-center justify-between text-[11px] text-stone-500 pt-1">
+                  <a
+                    href={`tel:${COMPANY_DETAILS.phones[0].number}`}
+                    className="inline-flex items-center gap-1 hover:text-[#C5A059] font-medium"
+                    title="Call Lobo Travels desk directly"
+                  >
+                    <Phone className="w-3 h-3 text-[#C5A059]" />
+                    <span>Call Concierge</span>
+                  </a>
+                  <a
+                    href={`https://wa.me/${COMPANY_DETAILS.whatsappNumber}?text=${encodeURIComponent('Hello Lobo Travels! I would like to plan a custom trip in India.')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 hover:text-emerald-600 font-medium"
+                    title="Chat on WhatsApp"
+                  >
+                    <MessageCircle className="w-3 h-3 text-[#25D366]" />
+                    <span>WhatsApp</span>
+                  </a>
                 </div>
               </form>
             )}
