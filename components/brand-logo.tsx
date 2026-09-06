@@ -24,7 +24,7 @@ export function BrandLogo({
   return (
     <div className={`inline-flex items-center select-none ${className}`}>
       <Image
-        src="/assets/All-White Logo.png"
+        src="/assets/Lobo-All-WhiteLogo.png"
         alt="Lobo Travels"
         width={240}
         height={88}
