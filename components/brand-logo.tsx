@@ -27,7 +27,7 @@ export function BrandLogo({
     <div className={`inline-flex items-center select-none ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={currentSrc}
+        src="/lobotravels-all-whitelogo.png"
         alt="Lobo Travels"
         width={240}
         height={88}
