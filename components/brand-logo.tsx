@@ -1,8 +1,9 @@
 'use client';
-
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { LOBO_LOGO_SRC, LOBO_LOGO_BASE64 } from '@/lib/logo-data';
+import { LOBO_LOGO_BASE64 } from '@/lib/logo-data';
+
+const LOBO_LOGO_SRC = '/lobotravels-all-whitelogo.png';
 
 interface BrandLogoProps {
   variant?: 'light' | 'dark' | 'white';
@@ -11,12 +12,8 @@ interface BrandLogoProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function BrandLogo({
-  className = '',
-  size = 'md',
-}: BrandLogoProps) {
+export function BrandLogo({ className = '', size = 'md' }: BrandLogoProps) {
   const [currentSrc, setCurrentSrc] = useState<string>(LOBO_LOGO_SRC);
-
   const sizeClasses = {
     sm: 'h-8 sm:h-9 max-w-[140px]',
     md: 'h-11 sm:h-12 max-w-[190px]',
@@ -27,7 +24,7 @@ export function BrandLogo({
     <div className={`inline-flex items-center select-none ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/lobotravels-all-whitelogo.png"
+        src={currentSrc}
         alt="Lobo Travels"
         width={240}
         height={88}
@@ -35,33 +32,11 @@ export function BrandLogo({
         loading="eager"
         decoding="sync"
         onError={() => {
-          // If server path or URL fails to load, immediately switch to the embedded PNG data
           if (currentSrc !== LOBO_LOGO_BASE64) {
             setCurrentSrc(LOBO_LOGO_BASE64);
           }
         }}
       />
     </div>
-  );
-}
-
-export function LogoLink({
-  variant = 'white',
-  size = 'md',
-  className = '',
-}: {
-  variant?: 'light' | 'dark' | 'white';
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
-}) {
-  return (
-    <Link
-      href="/"
-      id="brand-logo-link"
-      className={`inline-flex items-center transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A059] ${className}`}
-      aria-label="Lobo Travels - Home"
-    >
-      <BrandLogo variant={variant} size={size} />
-    </Link>
   );
 }
